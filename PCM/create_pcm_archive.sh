@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-VERSION=$1
+VERSION=$(echo "$1" | tr '/' '-')
 
 if [ -z "$VERSION" ]; then
   echo "ERROR: VERSION not provided"
@@ -44,7 +44,8 @@ sed -i "/INSTALL_SIZE_HERE/d" PCM/archive/metadata.json
 
 echo "Zip PCM archive"
 cd PCM/archive
-zip -r "../KiCAD-PCM-${VERSION}.zip" .
+SAFE_VERSION=$(echo "$VERSION" | tr '/' '-')
+zip -r "../KiCAD-PCM-${SAFE_VERSION}.zip" .
 cd ../..
 
 ZIP_FILE="PCM/KiCAD-PCM-${VERSION}.zip"
