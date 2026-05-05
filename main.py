@@ -19,7 +19,7 @@ logger = logging.getLogger()
 
 def download_part(lcsc_id, dir):
     os.makedirs(os.path.dirname(dir), exist_ok=True)
-    easyeda2kicad.main(["--full", f"--lcsc_id={lcsc_id}", "--output", dir, "--overwrite"])
+     easyeda2kicad.main(["--full", f"--lcsc_id={lcsc_id}", "--output", dir, "--overwrite", "--project-relative"])
 
 
 class Plugin(pcbnew.ActionPlugin):
@@ -52,8 +52,8 @@ class Dialog(wx.Dialog):
         )
 
         board = pcbnew.GetBoard()
-        download_dir = f"{os.path.dirname(board.GetFileName())}/libs/easyeda/easyeda"
-
+        os.chdir(os.path.dirname(board.GetFileName()))
+        download_dir = "./libs/easyeda/easyeda"
         content = wx.BoxSizer(wx.VERTICAL)
 
         grid = wx.GridSizer(2, 2, 5, 5)
