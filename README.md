@@ -7,15 +7,14 @@ little menu to download parts by their LCSC id.
 
 ## Installation
 
-- Install [easyeda2kicad.py](https://github.com/uPesy/easyeda2kicad.py):  
-  `pip install easyeda2kicad`
-- Add [my repository](https://github.com/Yanndroid/Yanndroid-KiCAD-Repository)  to KiCAD:  
-  `https://raw.githubusercontent.com/Yanndroid/Yanndroid-KiCAD-Repository/master/repository.json`
+- Add [my repository](https://github.com/KoenLammers/KiCAD-EasyEDA-Parts) to KiCAD:  
+  `https://raw.githubusercontent.com/KoenLammers/KiCAD-EasyEDA-Parts/main/PCM/repository.json`
 - Download the `KiCAD EasyEDA Parts` plugin in the KiCAD Plugin and Content Manager.
+  (The required Python dependency will be installed automatically.)
 
 ## Usage
 
-- Click <img src="icon.png" width="20"/> in the toolbar (PCB Editor).
+- Click <img src="icon.png" width="20"/> in the toolbar (PCB Editor or Schematic Editor).
 - Enter the LCSC id of the part you want to download and click Download.
-- The files will then be downloaded to ./libs/easyeda/ in you project folder.
-- Make sure you've addd the libraries in Project Specific Libraries.
+- The files will then be downloaded to ./libs/easyeda/ in your project folder.
+- Make sure you've added the libraries in Project Specific Libraries.
