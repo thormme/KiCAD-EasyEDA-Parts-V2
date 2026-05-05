@@ -2,6 +2,7 @@ name: KiCAD PCM packaging
 
 permissions:
   contents: write
+  releases: write
   
 
 on:
