@@ -9,14 +9,57 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
+      # =========================
+      # DEBUG: show context
+      # =========================
+      - name: Debug - GitHub context
+        run: |
+          echo "event_name=${{ github.event_name }}"
+          echo "ref=${{ github.ref }}"
+          echo "tag=${{ github.event.release.tag_name }}"
+          echo "workspace=$(pwd)"
+          ls -R
+
+      # =========================
+      # CREATE ARCHIVE
+      # =========================
       - name: Create archive
         run: |
+          set -euxo pipefail
+
           TAG="${{ github.event.release.tag_name }}"
+          echo "Building for TAG=$TAG"
+
           chmod +x ./PCM/create_pcm_archive.sh
           ./PCM/create_pcm_archive.sh "$TAG"
 
+      # =========================
+      # DEBUG: verify file exists
+      # =========================
+      - name: Debug - check output file
+        run: |
+          set -euxo pipefail
+
+          FILE="./PCM/KiCAD-PCM-${{ github.event.release.tag_name }}.zip"
+
+          echo "Checking file: $FILE"
+          ls -lh ./PCM || true
+
+          if [ ! -f "$FILE" ]; then
+            echo "❌ ERROR: File not found!"
+            exit 1
+          fi
+
+          echo "✅ File exists"
+          sha256sum "$FILE"
+          stat "$FILE"
+
+      # =========================
+      # UPLOAD RELEASE ASSET
+      # =========================
       - name: Upload zip as asset to release
         uses: svenstaro/upload-release-action@v2
         with:
