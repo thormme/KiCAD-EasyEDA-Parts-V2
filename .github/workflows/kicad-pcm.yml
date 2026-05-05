@@ -3,7 +3,6 @@ name: KiCAD PCM packaging
 permissions:
   contents: write
   releases: write
-  
 
 on:
   release:
@@ -21,47 +20,13 @@ jobs:
       - name: Create archive
         run: |
           chmod +x ./PCM/create_pcm_archive.sh
+          ./PCM/create_pcm_archive.sh "${{ github.event.release.tag_name }}"
 
-          if [ "${{ github.event_name }}" = "release" ]; then
-            VERSION="${{ github.event.release.tag_name }}"
-          else
-            VERSION="${GITHUB_REF_NAME}"
-          fi
-
-          echo "Using VERSION=$VERSION"
-          ./PCM/create_pcm_archive.sh "$VERSION"
-
-      - name: Compute SHA256 and size
-        id: meta
-        run: |
-          FILE=$(ls PCM/KiCAD-PCM-*.zip | head -n 1)
-
-          SHA=$(sha256sum "$FILE" | awk '{print $1}')
-          SIZE=$(stat -c%s "$FILE")
-
-          echo "SHA256=$SHA" >> $GITHUB_OUTPUT
-          echo "SIZE=$SIZE" >> $GITHUB_OUTPUT
-
-      - name: Upload zip as release asset
+      - name: Upload zip as asset to release
         uses: svenstaro/upload-release-action@v2
         with:
-          repo_token: ${{ secrets.PERSONAL_TOKEN }}
-          file: PCM/KiCAD-PCM-*.zip
-          asset_name: KiCAD-PCM.zip
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./PCM/KiCAD-PCM-${{ github.event.release.tag_name }}.zip
+          asset_name: KiCAD-PCM-${{ github.event.release.tag_name }}.zip
           overwrite: true
-          tag: ${{ github.event_name == 'release' && github.event.release.tag_name || github.ref_name }}
-
-      - name: Trigger repository rebuild
-        uses: benc-uk/workflow-dispatch@v1
-        with:
-          workflow: Rebuild repository
-          ref: refs/heads/master
-          repo: KoenLammers/Yanndroid-KiCAD-Repository
-          token: ${{ secrets.PERSONAL_TOKEN }}
-          inputs: |
-            {
-              "VERSION": "${{ github.event_name == 'release' && github.event.release.tag_name || github.ref_name }}",
-              "DOWNLOAD_SHA256": "${{ steps.meta.outputs.SHA256 }}",
-              "DOWNLOAD_SIZE": "${{ steps.meta.outputs.SIZE }}",
-              "DOWNLOAD_URL": "https://github.com/KoenLammers/KiCAD-EasyEDA-Parts-V2/releases/download/${{ github.event_name == 'release' && github.event.release.tag_name || github.ref_name }}/KiCAD-PCM.zip"
-            }
+          tag: ${{ github.event.release.tag_name }}
