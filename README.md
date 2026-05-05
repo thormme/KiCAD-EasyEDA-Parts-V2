@@ -9,8 +9,8 @@ Compatible with KiCad 10.0 and later.
 
 ## Installation
 
-- Add [my repository](https://github.com/KoenLammers/KiCAD-EasyEDA-Parts-V2-V2) to KiCAD:  
-  `https://raw.githubusercontent.com/KoenLammers/KiCAD-EasyEDA-Parts-V2-V2/main/PCM/repository.json`
+- Add [my repository](https://github.com/KoenLammers/KiCAD-EasyEDA-Parts-V2) to KiCAD:  
+  `https://raw.githubusercontent.com/KoenLammers/KiCAD-EasyEDA-Parts-V2/main/PCM/repository.json`
 - Download the `KiCAD EasyEDA Parts` plugin in the KiCAD Plugin and Content Manager.
   (The required Python dependency will be installed automatically.)
 
