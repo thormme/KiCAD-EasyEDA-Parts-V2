@@ -1,5 +1,8 @@
 name: KiCAD PCM packaging
 
+permissions:
+  contents: write
+
 on:
   release:
     types: [published]
@@ -29,7 +32,6 @@ jobs:
       - name: Compute SHA256 and size
         id: meta
         run: |
-          # IMPORTANT: match script output naming
           FILE=$(ls PCM/KiCAD-PCM-*.zip | head -n 1)
 
           SHA=$(sha256sum "$FILE" | awk '{print $1}')
@@ -41,11 +43,11 @@ jobs:
       - name: Upload zip as release asset
         uses: svenstaro/upload-release-action@v2
         with:
-          repo_token: ${{ secrets.PERSONAL_TOKEN }}
+          repo_token: ${{ github.token }}
           file: PCM/KiCAD-PCM-*.zip
           asset_name: KiCAD-PCM.zip
           overwrite: true
-          tag: ${{ github.event.release.tag_name }}
+          tag: ${{ github.event_name == 'release' && github.event.release.tag_name || github.ref_name }}
 
       - name: Trigger repository rebuild
         uses: benc-uk/workflow-dispatch@v1
@@ -53,11 +55,11 @@ jobs:
           workflow: Rebuild repository
           ref: refs/heads/master
           repo: KoenLammers/Yanndroid-KiCAD-Repository
-          token: ${{ secrets.PERSONAL_TOKEN }}
+          token: ${{ github.token }}
           inputs: |
             {
-              "VERSION": "${{ github.event.release.tag_name }}",
+              "VERSION": "${{ github.event_name == 'release' && github.event.release.tag_name || github.ref_name }}",
               "DOWNLOAD_SHA256": "${{ steps.meta.outputs.SHA256 }}",
               "DOWNLOAD_SIZE": "${{ steps.meta.outputs.SIZE }}",
-              "DOWNLOAD_URL": "https://github.com/KoenLammers/KiCAD-EasyEDA-Parts-V2/releases/download/${{ github.event.release.tag_name }}/KiCAD-PCM.zip"
+              "DOWNLOAD_URL": "https://github.com/KoenLammers/KiCAD-EasyEDA-Parts-V2/releases/download/${{ github.event_name == 'release' && github.event.release.tag_name || github.ref_name }}/KiCAD-PCM.zip"
             }
