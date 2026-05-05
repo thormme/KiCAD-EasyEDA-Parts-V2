@@ -1,56 +1,116 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
-VERSION=$(echo "$1" | tr '/' '-')
+# =========================
+# Input validation
+# =========================
+VERSION="${1:-}"
 
-if [ -z "$VERSION" ]; then
-  echo "ERROR: VERSION not provided"
+if [[ -z "$VERSION" ]]; then
+  echo "❌ ERROR: VERSION not provided"
   exit 1
 fi
 
-echo "Clean up old files"
-rm -f PCM/*.zip
-rm -rf PCM/archive
+VERSION="${VERSION//\//-}"
 
-echo "Create folder structure for ZIP"
+echo "=============================="
+echo "Building KiCAD PCM package"
+echo "Version: $VERSION"
+echo "PWD: $(pwd)"
+echo "=============================="
+
+# =========================
+# Cleanup
+# =========================
+echo "🧹 Cleaning old build artifacts..."
+rm -rf PCM/archive
+rm -f PCM/KiCAD-PCM-*.zip
+
+# =========================
+# Create structure
+# =========================
+echo "📁 Creating folder structure..."
 mkdir -p PCM/archive/plugins
 mkdir -p PCM/archive/resources
 
-echo "Copy files to destination"
+# =========================
+# Validate required files
+# =========================
+echo "🔍 Checking required files..."
 
-# store version
-echo "$VERSION" > PCM/archive/plugins/VERSION
+REQUIRED_FILES=(
+  "PCM/metadata.json"
+)
 
-# safe copies
-cp *.py PCM/archive/plugins/ 2>/dev/null || true
-cp *.png PCM/archive/plugins/ 2>/dev/null || true
+for f in "${REQUIRED_FILES[@]}"; do
+  if [[ ! -f "$f" ]]; then
+    echo "❌ Missing required file: $f"
+    exit 1
+  fi
+done
 
-cp PCM/icon.png PCM/archive/resources/ 2>/dev/null || true
+# optional but warned
+[[ -f "PCM/icon.png" ]] || echo "⚠️ Warning: PCM/icon.png missing"
+
+# =========================
+# Copy core files
+# =========================
+echo "📦 Copying files..."
+
 cp PCM/metadata.json PCM/archive/metadata.json
 
-echo "Modify archive metadata.json"
+if [[ -f "PCM/icon.png" ]]; then
+  cp PCM/icon.png PCM/archive/resources/
+fi
 
-# FIXED sed (safe delimiter)
-sed -i "s|VERSION_HERE|$VERSION|g" PCM/archive/metadata.json
+# copy python files (safe, explicit)
+find . -maxdepth 1 -name "*.py" -exec cp {} PCM/archive/plugins/ \;
 
-# ensure correct KiCad 6 version format (this line is redundant but safe)
-sed -i "s|\"kicad_version\": \"6.0\",|\"kicad_version\": \"6.0\"|g" PCM/archive/metadata.json
+# copy png files (safe, explicit)
+find . -maxdepth 1 -name "*.png" -exec cp {} PCM/archive/plugins/ \;
 
-# remove placeholders safely
-sed -i "/SHA256_HERE/d" PCM/archive/metadata.json
-sed -i "/DOWNLOAD_SIZE_HERE/d" PCM/archive/metadata.json
-sed -i "/DOWNLOAD_URL_HERE/d" PCM/archive/metadata.json
-sed -i "/INSTALL_SIZE_HERE/d" PCM/archive/metadata.json
+# =========================
+# VERSION file
+# =========================
+echo "$VERSION" > PCM/archive/plugins/VERSION
 
-echo "Zip PCM archive"
+# =========================
+# Modify metadata
+# =========================
+echo "✏️ Modifying metadata..."
+
+METADATA="PCM/archive/metadata.json"
+
+sed -i "s|VERSION_HERE|$VERSION|g" "$METADATA"
+
+# remove placeholders safely (if present)
+sed -i "/SHA256_HERE/d" "$METADATA" || true
+sed -i "/DOWNLOAD_SIZE_HERE/d" "$METADATA" || true
+sed -i "/DOWNLOAD_URL_HERE/d" "$METADATA" || true
+sed -i "/INSTALL_SIZE_HERE/d" "$METADATA" || true
+
+# =========================
+# Create zip
+# =========================
+echo "📦 Creating ZIP..."
+
 cd PCM/archive
-SAFE_VERSION=$(echo "$VERSION" | tr '/' '-')
-zip -r "../KiCAD-PCM-${SAFE_VERSION}.zip" .
+zip -r "../KiCAD-PCM-${VERSION}.zip" . >/dev/null
 cd ../..
 
 ZIP_FILE="PCM/KiCAD-PCM-${VERSION}.zip"
 
-echo "Gather data for repo rebuild"
+if [[ ! -f "$ZIP_FILE" ]]; then
+  echo "❌ ZIP creation failed!"
+  exit 1
+fi
+
+echo "✅ ZIP created: $ZIP_FILE"
+
+# =========================
+# Compute metadata
+# =========================
+echo "📊 Computing metadata..."
 
 DOWNLOAD_SHA256=$(sha256sum "$ZIP_FILE" | awk '{print $1}')
 DOWNLOAD_SIZE=$(stat -c%s "$ZIP_FILE")
@@ -58,8 +118,15 @@ INSTALL_SIZE=$(unzip -l "$ZIP_FILE" | tail -1 | awk '{print $1}')
 
 DOWNLOAD_URL="https://github.com/KoenLammers/KiCAD-EasyEDA-Parts-V2/releases/download/${VERSION}/KiCAD-PCM-${VERSION}.zip"
 
+# =========================
+# Export for GitHub Actions
+# =========================
 echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 echo "DOWNLOAD_SHA256=$DOWNLOAD_SHA256" >> "$GITHUB_ENV"
 echo "DOWNLOAD_SIZE=$DOWNLOAD_SIZE" >> "$GITHUB_ENV"
 echo "DOWNLOAD_URL=$DOWNLOAD_URL" >> "$GITHUB_ENV"
 echo "INSTALL_SIZE=$INSTALL_SIZE" >> "$GITHUB_ENV"
+
+echo "=============================="
+echo "🎉 Build complete successfully"
+echo "=============================="
