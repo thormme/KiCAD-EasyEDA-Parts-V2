@@ -3,7 +3,7 @@
   "name": "KiCAD EasyEDA Parts",
   "description": "Download EasyEDA parts and convert them for KiCAD",
   "description_full": "This plugin allows you to download EasyEDA footprints, symbols and 3d models and convert them for KiCAD.",
-  "identifier": "com.github.koenlammers.kicad-easyeda-parts-V2",
+  "identifier": "com.github.koenlammers.kicad-easyeda-parts",
   "type": "plugin",
   "author": {
     "name": "Koen Lammers",
@@ -22,14 +22,12 @@
     "homepage": "https://github.com/KoenLammers/KiCAD-EasyEDA-Parts-V2"
   },
   "versions": [
-  {
-    "version": "0.1.0",
-    "status": "testing",
-    "kicad_version": "10.0",
-    "download_sha256": "PUT_SHA256_HERE",
-    "download_size": 123456,
-    "download_url": "https://github.com/KoenLammers/KiCAD-EasyEDA-Parts/releases/download/v0.1.0/plugin.zip",
-    "install_size": 234567
-  }
-]
+    {
+      "version": "0.2.0",
+      "status": "testing",
+      "kicad_version": "6.0",
+      "download_url": "https://github.com/KoenLammers/KiCAD-EasyEDA-Parts-V2/releases/download/0.2.0/plugin.zip",
+      "download_sha256": "PUT_SHA256_HERE"
+    }
+  ]
 }

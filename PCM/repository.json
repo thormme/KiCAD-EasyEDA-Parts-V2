@@ -1,0 +1,13 @@
+{
+  "$schema": "https://go.kicad.org/pcm/schemas/v1",
+  "name": "KiCAD EasyEDA Parts Repository",
+  "maintainer": {
+    "name": "Koen Lammers",
+    "contact": {
+      "web": "https://github.com/KoenLammers/KiCAD-EasyEDA-Parts-V2"
+    }
+  },
+  "packages": {
+    "url": "https://raw.githubusercontent.com/KoenLammers/KiCAD-EasyEDA-Parts-V2/master/PCM/packages.json"
+  }
+}
