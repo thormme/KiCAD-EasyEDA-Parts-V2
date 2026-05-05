@@ -19,14 +19,15 @@ jobs:
 
       - name: Create archive
         run: |
+          TAG="${{ github.event.release.tag_name || github.ref_name }}"
           chmod +x ./PCM/create_pcm_archive.sh
-          ./PCM/create_pcm_archive.sh "${{ github.event.release.tag_name }}"
+          ./PCM/create_pcm_archive.sh "$TAG"
 
       - name: Upload zip as asset to release
         uses: svenstaro/upload-release-action@v2
         with:
-          repo_token: ${{ secrets.PERSONAL_TOKEN }}
-          file: ./PCM/KiCAD-PCM-${{ github.event.release.tag_name }}.zip
-          asset_name: KiCAD-PCM-${{ github.event.release.tag_name }}.zip
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./PCM/KiCAD-PCM-${{ github.event.release.tag_name || github.ref_name }}.zip
+          asset_name: KiCAD-PCM-${{ github.event.release.tag_name || github.ref_name }}.zip
           overwrite: true
-          tag: ${{ github.event.release.tag_name }}
+          tag: ${{ github.event.release.tag_name || github.ref_name }}
