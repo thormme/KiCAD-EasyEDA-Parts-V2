@@ -22,10 +22,6 @@ def ensure_easyeda2kicad():
 
 easyeda2kicad = ensure_easyeda2kicad()
 
-# TODO:
-#  - update library tables
-#  - download folder selection
-
 logger = logging.getLogger()
 
 
