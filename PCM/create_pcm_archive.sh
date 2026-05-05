@@ -26,7 +26,7 @@ cp *.py PCM/archive/plugins/ 2>/dev/null || true
 cp *.png PCM/archive/plugins/ 2>/dev/null || true
 
 cp PCM/icon.png PCM/archive/resources/ 2>/dev/null || true
-cp PCM/metadata.template.json PCM/archive/metadata.json
+cp PCM/metadata.json PCM/archive/metadata.json
 
 echo "Modify archive metadata.json"
 sed -i "s/VERSION_HERE/$VERSION/g" PCM/archive/metadata.json
