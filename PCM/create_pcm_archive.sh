@@ -18,10 +18,10 @@ mkdir -p PCM/archive/resources
 
 echo "Copy files to destination"
 
-# FIXED: no "cp VERSION"
+# store version
 echo "$VERSION" > PCM/archive/plugins/VERSION
 
-# safe copies (ignore missing files)
+# safe copies
 cp *.py PCM/archive/plugins/ 2>/dev/null || true
 cp *.png PCM/archive/plugins/ 2>/dev/null || true
 
@@ -29,10 +29,12 @@ cp PCM/icon.png PCM/archive/resources/ 2>/dev/null || true
 cp PCM/metadata.json PCM/archive/metadata.json
 
 echo "Modify archive metadata.json"
-sed -i "s/VERSION_HERE/$VERSION/g" PCM/archive/metadata.json
 
-# ensure correct KiCad 6 version format
-sed -i "s/\"kicad_version\": \"6.0\",/\"kicad_version\": \"6.0\"/g" PCM/archive/metadata.json
+# FIXED sed (safe delimiter)
+sed -i "s|VERSION_HERE|$VERSION|g" PCM/archive/metadata.json
+
+# ensure correct KiCad 6 version format (this line is redundant but safe)
+sed -i "s|\"kicad_version\": \"6.0\",|\"kicad_version\": \"6.0\"|g" PCM/archive/metadata.json
 
 # remove placeholders safely
 sed -i "/SHA256_HERE/d" PCM/archive/metadata.json
@@ -49,12 +51,10 @@ ZIP_FILE="PCM/KiCAD-PCM-${VERSION}.zip"
 
 echo "Gather data for repo rebuild"
 
-# SHA256 (Linux-safe)
 DOWNLOAD_SHA256=$(sha256sum "$ZIP_FILE" | awk '{print $1}')
 DOWNLOAD_SIZE=$(stat -c%s "$ZIP_FILE")
 INSTALL_SIZE=$(unzip -l "$ZIP_FILE" | tail -1 | awk '{print $1}')
 
-# IMPORTANT: fix repo URL (remove V2-V2 if wrong)
 DOWNLOAD_URL="https://github.com/KoenLammers/KiCAD-EasyEDA-Parts-V2/releases/download/${VERSION}/KiCAD-PCM-${VERSION}.zip"
 
 echo "VERSION=$VERSION" >> "$GITHUB_ENV"
