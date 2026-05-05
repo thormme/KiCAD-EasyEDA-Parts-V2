@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# =========================
-# Input validation
-# =========================
 VERSION="${1:-}"
 
 if [[ -z "$VERSION" ]]; then
@@ -14,113 +11,87 @@ fi
 VERSION="${VERSION//\//-}"
 
 echo "=============================="
-echo "Building KiCAD PCM package"
+echo "KiCAD PCM build"
 echo "Version: $VERSION"
 echo "PWD: $(pwd)"
 echo "=============================="
 
-# =========================
+# -------------------------
 # Cleanup
-# =========================
-echo "🧹 Cleaning old build artifacts..."
+# -------------------------
 rm -rf PCM/archive
 rm -f PCM/KiCAD-PCM-*.zip
 
-# =========================
+# -------------------------
 # Create structure
-# =========================
-echo "📁 Creating folder structure..."
+# -------------------------
 mkdir -p PCM/archive/plugins
 mkdir -p PCM/archive/resources
 
-# =========================
+# -------------------------
 # Validate required files
-# =========================
-echo "🔍 Checking required files..."
+# -------------------------
+if [[ ! -f "PCM/metadata.json" ]]; then
+  echo "❌ Missing PCM/metadata.json"
+  exit 1
+fi
 
-REQUIRED_FILES=(
-  "PCM/metadata.json"
-)
-
-for f in "${REQUIRED_FILES[@]}"; do
-  if [[ ! -f "$f" ]]; then
-    echo "❌ Missing required file: $f"
-    exit 1
-  fi
-done
-
-# optional but warned
-[[ -f "PCM/icon.png" ]] || echo "⚠️ Warning: PCM/icon.png missing"
-
-# =========================
+# -------------------------
 # Copy core files
-# =========================
-echo "📦 Copying files..."
-
+# -------------------------
 cp PCM/metadata.json PCM/archive/metadata.json
 
 if [[ -f "PCM/icon.png" ]]; then
-  cp PCM/icon.png PCM/archive/resources/
+  cp PCM/icon.png PCM/archive/resources/icon.png
 fi
 
-# copy python files (safe, explicit)
-find . -maxdepth 1 -name "*.py" -exec cp {} PCM/archive/plugins/ \;
+# Copy plugin sources (ONLY from PCM/)
+find PCM -maxdepth 1 -name "*.py" -exec cp {} PCM/archive/plugins/ \;
+find PCM -maxdepth 1 -name "*.png" -exec cp {} PCM/archive/plugins/ \;
 
-# copy png files (safe, explicit)
-find . -maxdepth 1 -name "*.png" -exec cp {} PCM/archive/plugins/ \;
-
-# =========================
-# VERSION file
-# =========================
+# -------------------------
+# Version file
+# -------------------------
 echo "$VERSION" > PCM/archive/plugins/VERSION
 
-# =========================
-# Modify metadata
-# =========================
-echo "✏️ Modifying metadata..."
-
+# -------------------------
+# Patch metadata
+# -------------------------
 METADATA="PCM/archive/metadata.json"
 
 sed -i "s|VERSION_HERE|$VERSION|g" "$METADATA"
 
-# remove placeholders safely (if present)
-sed -i "/SHA256_HERE/d" "$METADATA" || true
-sed -i "/DOWNLOAD_SIZE_HERE/d" "$METADATA" || true
-sed -i "/DOWNLOAD_URL_HERE/d" "$METADATA" || true
-sed -i "/INSTALL_SIZE_HERE/d" "$METADATA" || true
+# remove placeholders if present
+sed -i "/SHA256_HERE/d" "$METADATA"
+sed -i "/DOWNLOAD_SIZE_HERE/d" "$METADATA"
+sed -i "/DOWNLOAD_URL_HERE/d" "$METADATA"
+sed -i "/INSTALL_SIZE_HERE/d" "$METADATA"
 
-# =========================
-# Create zip
-# =========================
-echo "📦 Creating ZIP..."
-
+# -------------------------
+# Create ZIP
+# -------------------------
 cd PCM/archive
-zip -r "../KiCAD-PCM-${VERSION}.zip" . >/dev/null
+zip -r "../KiCAD-PCM-${VERSION}.zip" . > /dev/null
 cd ../..
 
 ZIP_FILE="PCM/KiCAD-PCM-${VERSION}.zip"
 
 if [[ ! -f "$ZIP_FILE" ]]; then
-  echo "❌ ZIP creation failed!"
+  echo "❌ ZIP creation failed"
   exit 1
 fi
 
 echo "✅ ZIP created: $ZIP_FILE"
 
-# =========================
-# Compute metadata
-# =========================
-echo "📊 Computing metadata..."
-
+# -------------------------
+# Metadata for CI
+# -------------------------
 DOWNLOAD_SHA256=$(sha256sum "$ZIP_FILE" | awk '{print $1}')
 DOWNLOAD_SIZE=$(stat -c%s "$ZIP_FILE")
 INSTALL_SIZE=$(unzip -l "$ZIP_FILE" | tail -1 | awk '{print $1}')
 
 DOWNLOAD_URL="https://github.com/KoenLammers/KiCAD-EasyEDA-Parts-V2/releases/download/${VERSION}/KiCAD-PCM-${VERSION}.zip"
 
-# =========================
-# Export for GitHub Actions
-# =========================
 echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 echo "DOWNLOAD_SHA256=$DOWNLOAD_SHA256" >> "$GITHUB_ENV"
 echo "DOWNLOAD_SIZE=$DOWNLOAD_SIZE" >> "$GITHUB_ENV"
@@ -128,5 +99,5 @@ echo "DOWNLOAD_URL=$DOWNLOAD_URL" >> "$GITHUB_ENV"
 echo "INSTALL_SIZE=$INSTALL_SIZE" >> "$GITHUB_ENV"
 
 echo "=============================="
-echo "🎉 Build complete successfully"
+echo "Build complete"
 echo "=============================="
