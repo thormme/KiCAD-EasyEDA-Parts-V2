@@ -25,7 +25,7 @@ jobs:
       - name: Upload zip as asset to release
         uses: svenstaro/upload-release-action@v2
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          repo_token: ${{ secrets.PERSONAL_TOKEN }}
           file: ./PCM/KiCAD-PCM-${{ github.event.release.tag_name }}.zip
           asset_name: KiCAD-PCM-${{ github.event.release.tag_name }}.zip
           overwrite: true
