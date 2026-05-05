@@ -5,66 +5,45 @@ on:
     types: [published]
 
 jobs:
-  create_archive:
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # =========================
-      # DEBUG: show context
-      # =========================
-      - name: Debug - GitHub context
+      - name: Debug context
         run: |
-          echo "event_name=${{ github.event_name }}"
-          echo "ref=${{ github.ref }}"
+          echo "event=${{ github.event_name }}"
           echo "tag=${{ github.event.release.tag_name }}"
-          echo "workspace=$(pwd)"
-          ls -R
+          echo "pwd=$(pwd)"
+          ls -R PCM
 
-      # =========================
-      # CREATE ARCHIVE
-      # =========================
-      - name: Create archive
+      - name: Build archive
         run: |
-          set -euxo pipefail
-
-          TAG="${{ github.event.release.tag_name }}"
-          echo "Building for TAG=$TAG"
-
           chmod +x ./PCM/create_pcm_archive.sh
-          ./PCM/create_pcm_archive.sh "$TAG"
+          ./PCM/create_pcm_archive.sh "${{ github.event.release.tag_name }}"
 
-      # =========================
-      # DEBUG: verify file exists
-      # =========================
-      - name: Debug - check output file
+      - name: Verify output
         run: |
-          set -euxo pipefail
-
           FILE="./PCM/KiCAD-PCM-${{ github.event.release.tag_name }}.zip"
 
-          echo "Checking file: $FILE"
-          ls -lh ./PCM || true
+          echo "Checking $FILE"
+          ls -lh PCM
 
-          if [ ! -f "$FILE" ]; then
-            echo "❌ ERROR: File not found!"
+          if [[ ! -f "$FILE" ]]; then
+            echo "❌ ZIP missing"
             exit 1
           fi
 
-          echo "✅ File exists"
           sha256sum "$FILE"
-          stat "$FILE"
+          unzip -l "$FILE"
 
-      # =========================
-      # UPLOAD RELEASE ASSET
-      # =========================
-      - name: Upload zip as asset to release
+      - name: Upload release asset
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.PERSONAL_TOKEN }}
           file: ./PCM/KiCAD-PCM-${{ github.event.release.tag_name }}.zip
           asset_name: KiCAD-PCM-${{ github.event.release.tag_name }}.zip
-          overwrite: true
           tag: ${{ github.event.release.tag_name }}
+          overwrite: true
