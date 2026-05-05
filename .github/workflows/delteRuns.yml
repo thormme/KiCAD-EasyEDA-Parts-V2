@@ -1,4 +1,4 @@
-name: Delete Workflow Runs
+name: Wipe All Workflow Runs
 
 on:
   workflow_dispatch:
@@ -7,10 +7,12 @@ jobs:
   cleanup:
     runs-on: ubuntu-latest
     steps:
-      - name: Delete workflow runs
+      - name: Delete ALL workflow runs
         uses: Mattraks/delete-workflow-runs@v2.1.0
         with:
           token: ${{ secrets.PERSONAL_TOKEN }}
           repository: ${{ github.repository }}
-          retain_days: 7
-          keep_minimum_runs: 5
+          retain_days: 0
+          keep_minimum_runs: 0
+          delete_workflow_by_state_pattern: ALL
+          delete_run_by_conclusion_pattern: ALL
