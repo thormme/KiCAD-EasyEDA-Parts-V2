@@ -1,8 +1,5 @@
 name: KiCAD PCM packaging
 
-permissions:
-  contents: write
-
 on:
   release:
     types: [published]
@@ -20,7 +17,7 @@ jobs:
           chmod +x ./PCM/create_pcm_archive.sh
           ./PCM/create_pcm_archive.sh "$TAG"
 
-      - name: Upload release asset
+      - name: Upload zip as asset to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.PERSONAL_TOKEN }}
