@@ -40,8 +40,10 @@ class Plugin(pcbnew.ActionPlugin):
         self.category = "Library download"
         self.description = "Download footprints, symbols and 3d models from EasyEDA."
         self.show_toolbar_button = True
-        path, filename = os.path.split(os.path.abspath(__file__))
-        self.icon_file_name = os.path.join(path, "icon.png")
+        self.icon_file_name = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icon.png")
+        # Register for both PCB and Schematic editors
+        self.pcbnew_action = True
+        self.schematic_action = True
 
     def Run(self):
         dialog = Dialog(None)
