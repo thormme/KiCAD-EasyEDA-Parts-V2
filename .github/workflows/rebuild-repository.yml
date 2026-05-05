@@ -1,0 +1,40 @@
+name: Rebuild repository
+
+on:
+  workflow_dispatch:
+    inputs:
+      VERSION:
+        description: "Release version"
+        required: true
+      DOWNLOAD_SHA256:
+        description: "SHA256 of package"
+        required: true
+      DOWNLOAD_SIZE:
+        description: "ZIP size in bytes"
+        required: true
+      DOWNLOAD_URL:
+        description: "Release download URL"
+        required: true
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Show inputs
+        run: |
+          echo "Version: ${{ inputs.VERSION }}"
+          echo "SHA256: ${{ inputs.DOWNLOAD_SHA256 }}"
+          echo "Size: ${{ inputs.DOWNLOAD_SIZE }}"
+          echo "URL: ${{ inputs.DOWNLOAD_URL }}"
+
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Update repository metadata (example)
+        run: |
+          echo "Updating repository state..."
+          echo "${{ inputs.VERSION }}" > VERSION.txt
+
+      - name: Done
+        run: echo "Rebuild triggered successfully"
