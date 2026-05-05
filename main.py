@@ -25,9 +25,24 @@ easyeda2kicad = ensure_easyeda2kicad()
 logger = logging.getLogger()
 
 
-def download_part(lcsc_id, dir):
-    os.makedirs(os.path.dirname(dir), exist_ok=True)
-    easyeda2kicad.main(["--full", f"--lcsc_id={lcsc_id}", "--output", dir, "--overwrite", "--project-relative"])
+def download_part(lcsc_id, out_dir):
+    try:
+        os.makedirs(out_dir, exist_ok=True)
+        if easyeda2kicad is None:
+            logger.error("easyeda2kicad not available; please check installation")
+            return False
+        easyeda2kicad.main([
+            "--full",
+            f"--lcsc_id={lcsc_id}",
+            "--output",
+            out_dir,
+            "--overwrite",
+            "--project-relative",
+        ])
+        return True
+    except Exception:
+        logger.exception("Error downloading part %s", lcsc_id)
+        return False
 
 
 class Plugin(pcbnew.ActionPlugin):
