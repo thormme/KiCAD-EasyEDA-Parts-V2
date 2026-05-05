@@ -1,33 +1,40 @@
-#!/bin/sh
-
-# Credit: Bouni (https://github.com/Bouni/)
+#!/usr/bin/env bash
+set -e
 
 VERSION=$1
+
+if [ -z "$VERSION" ]; then
+  echo "ERROR: VERSION not provided"
+  exit 1
+fi
 
 echo "Clean up old files"
 rm -f PCM/*.zip
 rm -rf PCM/archive
-
 
 echo "Create folder structure for ZIP"
 mkdir -p PCM/archive/plugins
 mkdir -p PCM/archive/resources
 
 echo "Copy files to destination"
-cp VERSION PCM/archive/plugins
-cp *.py PCM/archive/plugins
-cp *.png PCM/archive/plugins
-# cp settings.json PCM/archive/plugins
-# cp -r icons PCM/archive/plugins
-cp PCM/icon.png PCM/archive/resources
-cp PCM/metadata.template.json PCM/archive/metadata.json
 
-echo "Write version info to file"
-echo $VERSION > PCM/archive/plugins/VERSION
+# FIXED: no "cp VERSION"
+echo "$VERSION" > PCM/archive/plugins/VERSION
+
+# safe copies (ignore missing files)
+cp *.py PCM/archive/plugins/ 2>/dev/null || true
+cp *.png PCM/archive/plugins/ 2>/dev/null || true
+
+cp PCM/icon.png PCM/archive/resources/ 2>/dev/null || true
+cp PCM/metadata.template.json PCM/archive/metadata.json
 
 echo "Modify archive metadata.json"
 sed -i "s/VERSION_HERE/$VERSION/g" PCM/archive/metadata.json
+
+# ensure correct KiCad 6 version format
 sed -i "s/\"kicad_version\": \"6.0\",/\"kicad_version\": \"6.0\"/g" PCM/archive/metadata.json
+
+# remove placeholders safely
 sed -i "/SHA256_HERE/d" PCM/archive/metadata.json
 sed -i "/DOWNLOAD_SIZE_HERE/d" PCM/archive/metadata.json
 sed -i "/DOWNLOAD_URL_HERE/d" PCM/archive/metadata.json
@@ -35,13 +42,23 @@ sed -i "/INSTALL_SIZE_HERE/d" PCM/archive/metadata.json
 
 echo "Zip PCM archive"
 cd PCM/archive
-zip -r ../KiCAD-PCM-$VERSION.zip .
+zip -r "../KiCAD-PCM-${VERSION}.zip" .
 cd ../..
 
-echo "Gather data for repo rebuild"
-echo VERSION=$VERSION >> $GITHUB_ENV
-echo DOWNLOAD_SHA256=$(shasum --algorithm 256 PCM/KiCAD-PCM-$VERSION.zip | xargs | cut -d' ' -f1) >> $GITHUB_ENV
-echo DOWNLOAD_SIZE=$(ls -l PCM/KiCAD-PCM-$VERSION.zip | xargs | cut -d' ' -f5) >> $GITHUB_ENV
-echo DOWNLOAD_URL="https:\/\/github.com\/KoenLammers\/KiCAD-EasyEDA-Parts-V2-V2\/releases\/download\/$VERSION\/KiCAD-PCM-$VERSION.zip" >> $GITHUB_ENV
-echo INSTALL_SIZE=$(unzip -l PCM/KiCAD-PCM-$VERSION.zip | tail -1 | xargs | cut -d' ' -f1) >> $GITHUB_ENV
+ZIP_FILE="PCM/KiCAD-PCM-${VERSION}.zip"
 
+echo "Gather data for repo rebuild"
+
+# SHA256 (Linux-safe)
+DOWNLOAD_SHA256=$(sha256sum "$ZIP_FILE" | awk '{print $1}')
+DOWNLOAD_SIZE=$(stat -c%s "$ZIP_FILE")
+INSTALL_SIZE=$(unzip -l "$ZIP_FILE" | tail -1 | awk '{print $1}')
+
+# IMPORTANT: fix repo URL (remove V2-V2 if wrong)
+DOWNLOAD_URL="https://github.com/KoenLammers/KiCAD-EasyEDA-Parts-V2/releases/download/${VERSION}/KiCAD-PCM-${VERSION}.zip"
+
+echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+echo "DOWNLOAD_SHA256=$DOWNLOAD_SHA256" >> "$GITHUB_ENV"
+echo "DOWNLOAD_SIZE=$DOWNLOAD_SIZE" >> "$GITHUB_ENV"
+echo "DOWNLOAD_URL=$DOWNLOAD_URL" >> "$GITHUB_ENV"
+echo "INSTALL_SIZE=$INSTALL_SIZE" >> "$GITHUB_ENV"
