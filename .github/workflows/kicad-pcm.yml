@@ -13,22 +13,18 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Get release tag
-        id: tag
-        run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-
       - name: Create archive
         run: |
           chmod +x ./PCM/create_pcm_archive.sh
-          ./PCM/create_pcm_archive.sh ${{ steps.tag.outputs.TAG }}
+          ./PCM/create_pcm_archive.sh "${{ github.event.release.tag_name }}"
 
       - name: Compute SHA256 and size
         id: meta
         run: |
-          FILE=./PCM/KiCAD-PCM-${{ steps.tag.outputs.TAG }}.zip
+          FILE=./PCM/KiCAD-PCM-${{ github.event.release.tag_name }}.zip
 
-          SHA=$(sha256sum $FILE | awk '{print $1}')
-          SIZE=$(stat -c%s $FILE)
+          SHA=$(sha256sum "$FILE" | awk '{print $1}')
+          SIZE=$(stat -c%s "$FILE")
 
           echo "SHA256=$SHA" >> $GITHUB_OUTPUT
           echo "SIZE=$SIZE" >> $GITHUB_OUTPUT
@@ -36,11 +32,11 @@ jobs:
       - name: Upload zip as release asset
         uses: svenstaro/upload-release-action@v2
         with:
-          repo_token: ${{ secrets.PERSONAL_TOKEN  }}
-          file: ./PCM/KiCAD-PCM-${{ steps.tag.outputs.TAG }}.zip
-          asset_name: KiCAD-PCM-${{ steps.tag.outputs.TAG }}.zip
+          repo_token: ${{ secrets.PERSONAL_TOKEN }}
+          file: ./PCM/KiCAD-PCM-${{ github.event.release.tag_name }}.zip
+          asset_name: KiCAD-PCM-${{ github.event.release.tag_name }}.zip
           overwrite: true
-          tag: ${{ steps.tag.outputs.TAG }}
+          tag: ${{ github.event.release.tag_name }}
 
       - name: Trigger repository rebuild
         uses: benc-uk/workflow-dispatch@v1
@@ -51,8 +47,8 @@ jobs:
           token: ${{ secrets.PERSONAL_TOKEN }}
           inputs: |
             {
-              "VERSION": "${{ steps.tag.outputs.TAG }}",
+              "VERSION": "${{ github.event.release.tag_name }}",
               "DOWNLOAD_SHA256": "${{ steps.meta.outputs.SHA256 }}",
               "DOWNLOAD_SIZE": "${{ steps.meta.outputs.SIZE }}",
-              "DOWNLOAD_URL": "https://github.com/KoenLammers/KiCAD-EasyEDA-Parts-V2/releases/download/${{ steps.tag.outputs.TAG }}/KiCAD-PCM-${{ steps.tag.outputs.TAG }}.zip"
+              "DOWNLOAD_URL": "https://github.com/KoenLammers/KiCAD-EasyEDA-Parts-V2/releases/download/${{ github.event.release.tag_name }}/KiCAD-PCM-${{ github.event.release.tag_name }}.zip"
             }
