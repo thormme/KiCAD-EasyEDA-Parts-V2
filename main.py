@@ -5,10 +5,22 @@ import logging
 import wx
 import pcbnew
 
-try:
-    import easyeda2kicad.__main__ as easyeda2kicad
-except ImportError:
-    easyeda2kicad = None
+def ensure_easyeda2kicad():
+    try:
+        import easyeda2kicad.__main__ as easyeda2kicad
+        return easyeda2kicad
+    except ImportError:
+        import subprocess
+        import sys
+        try:
+            subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'easyeda2kicad'])
+            import easyeda2kicad.__main__ as easyeda2kicad
+            return easyeda2kicad
+        except Exception as e:
+            logging.error(f"Failed to install easyeda2kicad: {e}")
+            return None
+
+easyeda2kicad = ensure_easyeda2kicad()
 
 # TODO:
 #  - update library tables
