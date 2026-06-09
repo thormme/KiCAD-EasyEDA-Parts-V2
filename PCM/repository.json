@@ -9,5 +9,10 @@
   },
   "packages": {
     "url": "https://raw.githubusercontent.com/KoenLammers/KiCAD-EasyEDA-Parts-V2/master/PCM/packages.json"
+  },
+  "resources": {
+      "update_time_utc": "2026-06-08 23:44:37",
+      "update_timestamp": 1780962277,
+      "url": "https://github.com/KoenLammers/KiCAD-EasyEDA-Parts-V2/releases/download/0.2.0/KiCAD-PCM-0.2.0.zip"
   }
 }
