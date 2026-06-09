@@ -4,6 +4,7 @@ import logging
 
 import wx
 import pcbnew
+from pathlib import Path
 
 def ensure_easyeda2kicad():
     try:
@@ -26,8 +27,10 @@ logger = logging.getLogger()
 
 
 def download_part(lcsc_id, out_dir):
+    out_dir_path = Path(out_dir)
+    abs_out_dir_path = out_dir_path.absolute()
     try:
-        os.makedirs(out_dir, exist_ok=True)
+        os.makedirs(abs_out_dir_path, exist_ok=True)
         if easyeda2kicad is None:
             logger.error("easyeda2kicad not available; please check installation")
             return False
@@ -35,7 +38,7 @@ def download_part(lcsc_id, out_dir):
             "--full",
             f"--lcsc_id={lcsc_id}",
             "--output",
-            out_dir,
+            str(abs_out_dir_path),
             "--overwrite",
             "--project-relative",
         ])
